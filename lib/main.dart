@@ -11,7 +11,11 @@ import 'package:open_filex/open_filex.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';
 
-void main() => runApp(const MyApp());
+void main() async {
+  // ✅ Đảm bảo Flutter khởi tạo xong trước khi chạy
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const MyApp());
+}
 
 // ==================== BẢO MẬT ====================
 class SecureStorage {
@@ -28,12 +32,18 @@ class DatabaseHelper {
 
   Future<Database> get database async {
     if (_db != null) return _db!;
-    _db = await _moCSDL();
-    return _db!;
+    try {
+      _db = await _moCSDL();
+      return _db!;
+    } catch (e) {
+      debugPrint('Lỗi mở CSDL: $e');
+      rethrow;
+    }
   }
 
   Future<Database> _moCSDL() async {
-    final path = p.join(await getDatabasesPath(), 'pt78.db');
+    final dbPath = await getDatabasesPath();
+    final path = p.join(dbPath, 'pt78.db');
     return await openDatabase(
       path,
       version: 1,
@@ -175,13 +185,18 @@ CREATE TABLE tai_khoan (
       .query('ky_luat', where: 'pham_nhan_id=?', whereArgs: [pid]);
 
   Future<Map?> dangNhap(String u, String p) async {
-    final mb = SecureStorage.bamMatKhau(p);
-    final r = await (await database).query(
-      'tai_khoan',
-      where: 'ten_dang_nhap=? AND mat_khau_bam=?',
-      whereArgs: [u, mb],
-    );
-    return r.isNotEmpty ? r.first : null;
+    try {
+      final mb = SecureStorage.bamMatKhau(p);
+      final r = await (await database).query(
+        'tai_khoan',
+        where: 'ten_dang_nhap=? AND mat_khau_bam=?',
+        whereArgs: [u, mb],
+      );
+      return r.isNotEmpty ? r.first : null;
+    } catch (e) {
+      debugPrint('Lỗi đăng nhập: $e');
+      return null;
+    }
   }
 }
 
@@ -251,6 +266,7 @@ class XuatPDF {
       }
       await OpenFilex.open(f.path);
     } catch (e) {
+      debugPrint('Lỗi xuất PDF: $e');
       if (ctx.mounted) {
         ScaffoldMessenger.of(ctx).showSnackBar(
           SnackBar(content: Text('Loi: $e'), backgroundColor: Colors.red),
@@ -272,54 +288,63 @@ class XuatPDF {
 // ==================== XUẤT EXCEL ====================
 class XuatExcel {
   static Future<void> xuatDanhSach(BuildContext ctx) async {
-    final ds = await DatabaseHelper.instance.layTatCa();
-    if (ds.isEmpty) {
+    try {
+      final ds = await DatabaseHelper.instance.layTatCa();
+      if (ds.isEmpty) {
+        if (ctx.mounted) {
+          ScaffoldMessenger.of(ctx).showSnackBar(
+            const SnackBar(content: Text('Chua co du lieu')),
+          );
+        }
+        return;
+      }
+      final ex = Excel.createExcel();
+      ex.delete('Sheet1');
+      final sh = ex['Danh Sach PT78'];
+      
+      sh.appendRow([
+        TextCellValue('STT'),
+        TextCellValue('Ma PT78'),
+        TextCellValue('Ho ten'),
+        TextCellValue('Ngay sinh'),
+        TextCellValue('Toi danh'),
+        TextCellValue('Ngay den trai'),
+        TextCellValue('Doi'),
+        TextCellValue('Trang thai')
+      ]);
+      
+      for (var i = 0; i < ds.length; i++) {
+        final p = ds[i];
+        sh.appendRow([
+          IntCellValue(i + 1),
+          TextCellValue('${p['ma_pt78']}'),
+          TextCellValue('${p['ho_ten']}'),
+          TextCellValue('${p['ngay_sinh'] ?? ""}'),
+          TextCellValue('${p['toi_danh'] ?? ""}'),
+          TextCellValue('${p['ngay_den_trai'] ?? ""}'),
+          TextCellValue('${p['doi'] ?? ""}'),
+          TextCellValue(p['trang_thai'] == 'dang_chap_hanh' ? 'Dang chap hanh' : 'Het an')
+        ]);
+      }
+      
+      final dir = await getTemporaryDirectory();
+      final f = File('${dir.path}/DanhSachPT78_${DateFormat('yyyyMMdd').format(DateTime.now())}.xlsx');
+      await f.writeAsBytes(ex.encode()!);
+      
       if (ctx.mounted) {
         ScaffoldMessenger.of(ctx).showSnackBar(
-          const SnackBar(content: Text('Chua co du lieu')),
+          const SnackBar(content: Text('Da xuat Excel'), backgroundColor: Colors.green),
         );
       }
-      return;
+      await OpenFilex.open(f.path);
+    } catch (e) {
+      debugPrint('Lỗi xuất Excel: $e');
+      if (ctx.mounted) {
+        ScaffoldMessenger.of(ctx).showSnackBar(
+          SnackBar(content: Text('Loi: $e'), backgroundColor: Colors.red),
+        );
+      }
     }
-    final ex = Excel.createExcel();
-    ex.delete('Sheet1');
-    final sh = ex['Danh Sach PT78'];
-    
-    sh.appendRow([
-      TextCellValue('STT'),
-      TextCellValue('Ma PT78'),
-      TextCellValue('Ho ten'),
-      TextCellValue('Ngay sinh'),
-      TextCellValue('Toi danh'),
-      TextCellValue('Ngay den trai'),
-      TextCellValue('Doi'),
-      TextCellValue('Trang thai')
-    ]);
-    
-    for (var i = 0; i < ds.length; i++) {
-      final p = ds[i];
-      sh.appendRow([
-        IntCellValue(i + 1),
-        TextCellValue('${p['ma_pt78']}'),
-        TextCellValue('${p['ho_ten']}'),
-        TextCellValue('${p['ngay_sinh'] ?? ""}'),
-        TextCellValue('${p['toi_danh'] ?? ""}'),
-        TextCellValue('${p['ngay_den_trai'] ?? ""}'),
-        TextCellValue('${p['doi'] ?? ""}'),
-        TextCellValue(p['trang_thai'] == 'dang_chap_hanh' ? 'Dang chap hanh' : 'Het an')
-      ]);
-    }
-    
-    final dir = await getTemporaryDirectory();
-    final f = File('${dir.path}/DanhSachPT78_${DateFormat('yyyyMMdd').format(DateTime.now())}.xlsx');
-    await f.writeAsBytes(ex.encode()!);
-    
-    if (ctx.mounted) {
-      ScaffoldMessenger.of(ctx).showSnackBar(
-        const SnackBar(content: Text('Da xuat Excel'), backgroundColor: Colors.green),
-      );
-    }
-    await OpenFilex.open(f.path);
   }
 }
 
@@ -334,20 +359,47 @@ class _ManHinhDangNhapState extends State<ManHinhDangNhap> {
   final _u = TextEditingController();
   final _p = TextEditingController();
   bool _dang = false;
+  bool _khoiTaoXong = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _kiemTraCSDL();
+  }
+
+  Future<void> _kiemTraCSDL() async {
+    try {
+      await DatabaseHelper.instance.database;
+    } catch (e) {
+      debugPrint('Lỗi khởi tạo CSDL: $e');
+    }
+    if (mounted) {
+      setState(() => _khoiTaoXong = true);
+    }
+  }
 
   Future<void> _dangNhap() async {
     setState(() => _dang = true);
-    final tk = await DatabaseHelper.instance.dangNhap(_u.text.trim(), _p.text);
-    setState(() => _dang = false);
-    if (tk != null && mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const ManHinhDanhSach()),
-      );
-    } else {
+    try {
+      final tk = await DatabaseHelper.instance.dangNhap(_u.text.trim(), _p.text);
+      setState(() => _dang = false);
+      if (tk != null && mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const ManHinhDanhSach()),
+        );
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Sai ten dang nhap hoac mat khau!'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    } catch (e) {
+      setState(() => _dang = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Sai ten dang nhap hoac mat khau!'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Loi: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -358,44 +410,46 @@ class _ManHinhDangNhapState extends State<ManHinhDangNhap> {
     body: Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.admin_panel_settings, size: 64, color: Colors.blueGrey),
-            const SizedBox(height: 16),
-            const Text('QUAN LY PT78', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 32),
-            TextField(
-              controller: _u,
-              decoration: const InputDecoration(
-                labelText: 'Ten dang nhap',
-                prefixIcon: Icon(Icons.person),
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _p,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Mat khau',
-                prefixIcon: Icon(Icons.lock),
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _dang ? null : _dangNhap,
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
-                child: _dang
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('DANG NHAP', style: TextStyle(fontSize: 16)),
-              ),
-            ),
-          ],
-        ),
+        child: _khoiTaoXong
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.admin_panel_settings, size: 64, color: Colors.blueGrey),
+                  const SizedBox(height: 16),
+                  const Text('QUAN LY PT78', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 32),
+                  TextField(
+                    controller: _u,
+                    decoration: const InputDecoration(
+                      labelText: 'Ten dang nhap',
+                      prefixIcon: Icon(Icons.person),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _p,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Mat khau',
+                      prefixIcon: Icon(Icons.lock),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _dang ? null : _dangNhap,
+                      style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
+                      child: _dang
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text('DANG NHAP', style: TextStyle(fontSize: 16)),
+                    ),
+                  ),
+                ],
+              )
+            : const CircularProgressIndicator(),
       ),
     ),
   );
@@ -414,16 +468,26 @@ class _ManHinhDanhSachState extends State<ManHinhDanhSach> {
   String _tk = '';
 
   Future<void> _tai() async {
+    if (!mounted) return;
     setState(() => _dang = true);
-    _ds = await DatabaseHelper.instance.layTatCa();
-    if (_tk.isNotEmpty) {
-      _ds = _ds
-          .where((p) =>
-              p['ho_ten'].toString().toLowerCase().contains(_tk.toLowerCase()) ||
-              p['ma_pt78'].toString().contains(_tk))
-          .toList();
+    try {
+      _ds = await DatabaseHelper.instance.layTatCa();
+      if (_tk.isNotEmpty) {
+        _ds = _ds
+            .where((p) =>
+                p['ho_ten'].toString().toLowerCase().contains(_tk.toLowerCase()) ||
+                p['ma_pt78'].toString().contains(_tk))
+            .toList();
+      }
+    } catch (e) {
+      _ds = [];
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Loi tai du lieu: $e'), backgroundColor: Colors.red),
+        );
+      }
     }
-    setState(() => _dang = false);
+    if (mounted) setState(() => _dang = false);
   }
 
   @override
@@ -651,13 +715,18 @@ class _ManHinhChiTietState extends State<ManHinhChiTiet> with SingleTickerProvid
   }
 
   Future<void> _tai() async {
+    if (!mounted) return;
     setState(() => _dang = true);
-    _gd = await DatabaseHelper.instance.layGiaDinh(widget.pn['id']);
-    _xl = await DatabaseHelper.instance.layXepLoai(widget.pn['id'], _nam);
-    _gth = await DatabaseHelper.instance.layGiamTH(widget.pn['id']);
-    _kt = await DatabaseHelper.instance.layKT(widget.pn['id']);
-    _kl = await DatabaseHelper.instance.layKL(widget.pn['id']);
-    setState(() => _dang = false);
+    try {
+      _gd = await DatabaseHelper.instance.layGiaDinh(widget.pn['id']);
+      _xl = await DatabaseHelper.instance.layXepLoai(widget.pn['id'], _nam);
+      _gth = await DatabaseHelper.instance.layGiamTH(widget.pn['id']);
+      _kt = await DatabaseHelper.instance.layKT(widget.pn['id']);
+      _kl = await DatabaseHelper.instance.layKL(widget.pn['id']);
+    } catch (e) {
+      debugPrint('Lỗi tải dữ liệu: $e');
+    }
+    if (mounted) setState(() => _dang = false);
   }
 
   Color _mauXL(String? xl) => switch (xl) {
@@ -1099,49 +1168,4 @@ class _ManHinhChiTietState extends State<ManHinhChiTiet> with SingleTickerProvid
       builder: (c) => AlertDialog(
         title: const Text('Them giam thoi han'),
         content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              decoration: const InputDecoration(labelText: 'So quyet dinh'),
-              onChanged: (v) => d['so_quyet_dinh'] = v,
-            ),
-            TextField(
-              decoration: const InputDecoration(labelText: 'Ngay quyet dinh'),
-              onChanged: (v) => d['ngay_quyet_dinh'] = v,
-            ),
-            TextField(
-              decoration: const InputDecoration(labelText: 'Muc giam'),
-              onChanged: (v) => d['muc_giam'] = v,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('HUY')),
-          ElevatedButton(
-            onPressed: () async {
-              await DatabaseHelper.instance.themGiamTH(widget.pn['id'], d);
-              if (mounted) Navigator.pop(c);
-              _tai();
-            },
-            child: const Text('LUU'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ==================== ỨNG DỤNG CHÍNH ====================
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-  @override
-  Widget build(BuildContext context) => MaterialApp(
-        title: 'Quan Ly PT78',
-        theme: ThemeData(
-          primarySwatch: Colors.blueGrey,
-          useMaterial3: true,
-        ),
-        debugShowCheckedModeBanner: false,
-        home: const ManHinhDangNhap(),
-      );
-}
+          main
