@@ -768,7 +768,7 @@ class _ManHinhChiTietState extends State<ManHinhChiTiet> with SingleTickerProvid
                           ],
                           onChanged: (v) {
                             if (v != null) {
-                              setState(() => _nam = v!);
+                              setState(() => _nam = v);
                               _tai();
                             }
                           },
