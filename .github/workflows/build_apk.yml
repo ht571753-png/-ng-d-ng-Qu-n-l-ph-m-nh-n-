@@ -1,0 +1,41 @@
+name: Build Android APK Phieu Theo Doi
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Cho phép chạy thủ công
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: ✅ Kiểm tra mã nguồn
+        uses: actions/checkout@v4
+
+      - name: ☕ Cài đặt Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: 📦 Cài đặt Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: 📥 Cài thư viện
+        run: flutter pub get
+
+      - name: 🔍 Kiểm tra lỗi
+        run: flutter analyze
+
+      - name: 🏗️ Build APK
+        run: flutter build apk --release
+
+      - name: 📤 Tải lên APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: UngDung_PhieuTheoDoi_PT78BH_Full
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 90
