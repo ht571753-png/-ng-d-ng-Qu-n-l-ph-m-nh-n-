@@ -5,7 +5,7 @@ import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:excel/excel.dart';
+import 'package:excel/excel.dart' hide Border, TextSpan;
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:intl/intl.dart';
@@ -23,7 +23,6 @@ class SecureStorage {
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _db;
-  static const _KHOA_MA_HOA = 'PT78_KHOA_2026_AN_NINH_NEI_BO!@#XYZ';
 
   DatabaseHelper._init();
 
@@ -115,7 +114,7 @@ CREATE TABLE tai_khoan (
     await db.insert('tai_khoan', {
       'ten_dang_nhap': 'admin',
       'mat_khau_bam': mk,
-      'ho_ten': 'Quản trị viên',
+      'ho_ten': 'Quan tri vien',
       'quyen': 'admin'
     });
   }
@@ -195,49 +194,49 @@ class XuatPDF {
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(32),
         header: (c) => pw.Column(children: [
-          pw.Text('TRẠI GIAM THỦ ĐỨC',
+          pw.Text('TRAI GIAM THU DUC',
               style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
           pw.SizedBox(height: 8),
-          pw.Text('PHIẾU THEO DÕI QUÁ TRÌNH CHẤP HÀNH ÁN PT78',
+          pw.Text('PHIEU THEO DOI QUY TRINH CHAP HANH AN PT78',
               style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 18)),
+          pw.SizedBox(height: 12),
           pw.Divider()
         ]),
         build: (c) => [
-          pw.Header(text: 'I. SƠ LƯỢC LÝ LỊCH'),
-          _dong('Mã PT78', pn['ma_pt78']),
-          _dong('Họ tên', pn['ho_ten'], dam: true),
-          _dong('Ngày sinh', pn['ngay_sinh']),
-          _dong('Nơi ĐKTT', pn['noi_dktt']),
-          _dong('Quê quán', pn['que_quan']),
-          _dong('Số CCCD', pn['so_cccd']),
-          _dong('Ngày đến trại', pn['ngay_den_trai']),
-          _dong('Tội danh', pn['toi_danh']),
-          _dong('Án phạt', pn['an_phat']),
-          pw.Header(text: 'II. TÓM TẮT HÀNH VI'),
+          pw.Header(text: 'I. SO LICH'),
+          _dong('Ma PT78', pn['ma_pt78']),
+          _dong('Ho ten', pn['ho_ten'], dam: true),
+          _dong('Ngay sinh', pn['ngay_sinh']),
+          _dong('Noi DKTT', pn['noi_dktt']),
+          _dong('Que quan', pn['que_quan']),
+          _dong('So CCCD', pn['so_cccd']),
+          _dong('Ngay den trai', pn['ngay_den_trai']),
+          _dong('Toi danh', pn['toi_danh']),
+          _dong('An phat', pn['an_phat']),
+          pw.Header(text: 'II. TOM TAT HANH VI'),
           pw.Container(
             padding: const pw.EdgeInsets.all(12),
-            decoration: pw.BoxDecoration(border: pw.Border.all()),
-            child: pw.Text(pn['tom_tat_hanh_vi'] ?? 'Chưa có',
+            child: pw.Text(pn['tom_tat_hanh_vi'] ?? 'Chua co',
                 style: const pw.TextStyle(lineSpacing: 1.5)),
           ),
-          pw.SizedBox(height: 20),
+          pw.SizedBox(height: 30),
           pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
                 pw.Column(children: [
-                  pw.Text('Người lập'),
-                  pw.SizedBox(height: 40),
-                  pw.Text('(Ký, họ tên)')
+                  pw.Text('Nguoi lap'),
+                  pw.SizedBox(height: 50),
+                  pw.Text('(Ky, ho ten)')
                 ]),
                 pw.Column(children: [
-                  pw.Text('Trưởng Phân trại'),
-                  pw.SizedBox(height: 40),
-                  pw.Text('(Ký, họ tên)')
+                  pw.Text('Truong Phan trai'),
+                  pw.SizedBox(height: 50),
+                  pw.Text('(Ky, ho ten)')
                 ]),
                 pw.Column(children: [
-                  pw.Text('Thủ trưởng đơn vị'),
-                  pw.SizedBox(height: 40),
-                  pw.Text('(Ký, đóng dấu)')
+                  pw.Text('Thu truong don vi'),
+                  pw.SizedBox(height: 50),
+                  pw.Text('(Ky, dong dau)')
                 ])
               ])
         ],
@@ -247,27 +246,26 @@ class XuatPDF {
       await f.writeAsBytes(await pdf.save());
       if (ctx.mounted) {
         ScaffoldMessenger.of(ctx).showSnackBar(
-          const SnackBar(content: Text('✅ Đã xuất PDF'), backgroundColor: Colors.green),
+          const SnackBar(content: Text('Da xuat PDF'), backgroundColor: Colors.green),
         );
       }
       await OpenFilex.open(f.path);
     } catch (e) {
       if (ctx.mounted) {
         ScaffoldMessenger.of(ctx).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Loi: $e'), backgroundColor: Colors.red),
         );
       }
     }
   }
 
   static pw.Widget _dong(String t, dynamic v, {bool dam = false}) =>
-      pw.Padding(padding: const pw.EdgeInsets.symmetric(vertical: 4), child: pw.RichText(
-        text: pw.TextSpan(children: [
-          pw.TextSpan(
-              text: '$t: ',
-              style: pw.TextStyle(fontWeight: dam ? pw.FontWeight.bold : pw.FontWeight.normal)),
-          pw.TextSpan(text: '${v ?? ""}')
-        ]),
+      pw.Padding(padding: const pw.EdgeInsets.symmetric(vertical: 4), child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text('$t: ', style: pw.TextStyle(fontWeight: dam ? pw.FontWeight.bold : pw.FontWeight.normal)),
+          pw.Expanded(child: pw.Text('${v ?? ""}'))
+        ],
       ));
 }
 
@@ -278,34 +276,47 @@ class XuatExcel {
     if (ds.isEmpty) {
       if (ctx.mounted) {
         ScaffoldMessenger.of(ctx).showSnackBar(
-          const SnackBar(content: Text('Chưa có dữ liệu')),
+          const SnackBar(content: Text('Chua co du lieu')),
         );
       }
       return;
     }
     final ex = Excel.createExcel();
     ex.delete('Sheet1');
-    final sh = ex['DS Phạm Nhân'];
-    sh.appendRow(['STT', 'Mã PT78', 'Họ tên', 'Ngày sinh', 'Tội danh', 'Ngày đến trại', 'Đội', 'Trạng thái']);
+    final sh = ex['Danh Sach PT78'];
+    
+    sh.appendRow([
+      TextCellValue('STT'),
+      TextCellValue('Ma PT78'),
+      TextCellValue('Ho ten'),
+      TextCellValue('Ngay sinh'),
+      TextCellValue('Toi danh'),
+      TextCellValue('Ngay den trai'),
+      TextCellValue('Doi'),
+      TextCellValue('Trang thai')
+    ]);
+    
     for (var i = 0; i < ds.length; i++) {
       final p = ds[i];
       sh.appendRow([
-        i + 1,
-        p['ma_pt78'],
-        p['ho_ten'],
-        p['ngay_sinh'],
-        p['toi_danh'],
-        p['ngay_den_trai'],
-        p['doi'],
-        p['trang_thai'] == 'dang_chap_hanh' ? 'Đang chấp hành' : 'Hết án'
+        IntCellValue(i + 1),
+        TextCellValue('${p['ma_pt78']}'),
+        TextCellValue('${p['ho_ten']}'),
+        TextCellValue('${p['ngay_sinh'] ?? ""}'),
+        TextCellValue('${p['toi_danh'] ?? ""}'),
+        TextCellValue('${p['ngay_den_trai'] ?? ""}'),
+        TextCellValue('${p['doi'] ?? ""}'),
+        TextCellValue(p['trang_thai'] == 'dang_chap_hanh' ? 'Dang chap hanh' : 'Het an')
       ]);
     }
+    
     final dir = await getTemporaryDirectory();
     final f = File('${dir.path}/DanhSachPT78_${DateFormat('yyyyMMdd').format(DateTime.now())}.xlsx');
     await f.writeAsBytes(ex.encode()!);
+    
     if (ctx.mounted) {
       ScaffoldMessenger.of(ctx).showSnackBar(
-        const SnackBar(content: Text('✅ Đã xuất Excel'), backgroundColor: Colors.green),
+        const SnackBar(content: Text('Da xuat Excel'), backgroundColor: Colors.green),
       );
     }
     await OpenFilex.open(f.path);
@@ -336,7 +347,7 @@ class _ManHinhDangNhapState extends State<ManHinhDangNhap> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Sai tên đăng nhập hoặc mật khẩu!'), backgroundColor: Colors.red),
+          const SnackBar(content: Text('Sai ten dang nhap hoac mat khau!'), backgroundColor: Colors.red),
         );
       }
     }
@@ -352,12 +363,12 @@ class _ManHinhDangNhapState extends State<ManHinhDangNhap> {
           children: [
             const Icon(Icons.admin_panel_settings, size: 64, color: Colors.blueGrey),
             const SizedBox(height: 16),
-            const Text('QUẢN LÝ PT78', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const Text('QUAN LY PT78', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 32),
             TextField(
               controller: _u,
               decoration: const InputDecoration(
-                labelText: 'Tên đăng nhập',
+                labelText: 'Ten dang nhap',
                 prefixIcon: Icon(Icons.person),
                 border: OutlineInputBorder(),
               ),
@@ -367,7 +378,7 @@ class _ManHinhDangNhapState extends State<ManHinhDangNhap> {
               controller: _p,
               obscureText: true,
               decoration: const InputDecoration(
-                labelText: 'Mật khẩu',
+                labelText: 'Mat khau',
                 prefixIcon: Icon(Icons.lock),
                 border: OutlineInputBorder(),
               ),
@@ -380,7 +391,7 @@ class _ManHinhDangNhapState extends State<ManHinhDangNhap> {
                 style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
                 child: _dang
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('ĐĂNG NHẬP', style: TextStyle(fontSize: 16)),
+                    : const Text('DANG NHAP', style: TextStyle(fontSize: 16)),
               ),
             ),
           ],
@@ -424,11 +435,11 @@ class _ManHinhDanhSachState extends State<ManHinhDanhSach> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: const Text('Danh Sách Phạm Nhân'),
+      title: const Text('Danh Sach Pham Nhan'),
       actions: [
         IconButton(
           icon: const Icon(Icons.table_chart),
-          tooltip: 'Xuất Excel',
+          tooltip: 'Xuat Excel',
           onPressed: () => XuatExcel.xuatDanhSach(context),
         ),
         IconButton(
@@ -453,7 +464,7 @@ class _ManHinhDanhSachState extends State<ManHinhDanhSach> {
           padding: const EdgeInsets.all(12),
           child: TextField(
             decoration: const InputDecoration(
-              hintText: 'Tìm theo tên, mã...',
+              hintText: 'Tim theo ten, ma...',
               prefixIcon: Icon(Icons.search),
               border: OutlineInputBorder(),
             ),
@@ -467,7 +478,7 @@ class _ManHinhDanhSachState extends State<ManHinhDanhSach> {
           child: _dang
               ? const Center(child: CircularProgressIndicator())
               : _ds.isEmpty
-                  ? const Center(child: Text('Chưa có phiếu, nhấn + để thêm'))
+                  ? const Center(child: Text('Chua co phieu, nhan + de them'))
                   : ListView.builder(
                       padding: const EdgeInsets.all(8),
                       itemCount: _ds.length,
@@ -477,7 +488,7 @@ class _ManHinhDanhSachState extends State<ManHinhDanhSach> {
                           child: ListTile(
                             title: Text('${p['ma_pt78']} — ${p['ho_ten']}'),
                             subtitle: Text(
-                                '${p['ngay_den_trai'] ?? "Chưa nhập"} | ${p['trang_thai'] == "dang_chap_hanh" ? "Đang chấp hành" : "Hết án"}'),
+                                '${p['ngay_den_trai'] ?? "Chua nhap"} | ${p['trang_thai'] == "dang_chap_hanh" ? "Dang chap hanh" : "Het an"}'),
                             onTap: () => Navigator.push(
                               context,
                               MaterialPageRoute(builder: (_) => ManHinhChiTiet(p, _tai)),
@@ -488,16 +499,16 @@ class _ManHinhDanhSachState extends State<ManHinhDanhSach> {
                                 final xac = await showDialog<bool>(
                                   context: context,
                                   builder: (c) => AlertDialog(
-                                    title: const Text('Xác nhận xóa'),
-                                    content: const Text('Xóa vĩnh viễn?'),
+                                    title: const Text('Xac nhan xoa'),
+                                    content: const Text('Xoa vinh vien?'),
                                     actions: [
                                       TextButton(
                                         onPressed: () => Navigator.pop(c, false),
-                                        child: const Text('HỦY'),
+                                        child: const Text('HUY'),
                                       ),
                                       TextButton(
                                         onPressed: () => Navigator.pop(c, true),
-                                        child: const Text('XÓA', style: TextStyle(color: Colors.red)),
+                                        child: const Text('XOA', style: TextStyle(color: Colors.red)),
                                       ),
                                     ],
                                   ),
@@ -532,7 +543,7 @@ class _ManHinhThemState extends State<ManHinhThem> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Thêm Phiếu PT78')),
+    appBar: AppBar(title: const Text('Them Phieu PT78')),
     body: Form(
       key: _f,
       child: SingleChildScrollView(
@@ -540,54 +551,54 @@ class _ManHinhThemState extends State<ManHinhThem> {
         child: Column(
           children: [
             TextFormField(
-              decoration: const InputDecoration(labelText: 'Mã PT78'),
+              decoration: const InputDecoration(labelText: 'Ma PT78'),
               onSaved: (v) => _d['ma_pt78'] = v,
             ),
             const SizedBox(height: 12),
             TextFormField(
-              decoration: const InputDecoration(labelText: 'Họ và tên *'),
+              decoration: const InputDecoration(labelText: 'Ho va ten *'),
               onSaved: (v) => _d['ho_ten'] = v,
-              validator: (v) => v?.isEmpty == true ? 'Bắt buộc' : null,
+              validator: (v) => v?.isEmpty == true ? 'Bat buoc' : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
-              decoration: const InputDecoration(labelText: 'Ngày sinh'),
+              decoration: const InputDecoration(labelText: 'Ngay sinh'),
               onSaved: (v) => _d['ngay_sinh'] = v,
             ),
             const SizedBox(height: 12),
             TextFormField(
-              decoration: const InputDecoration(labelText: 'Nơi ĐKTT'),
+              decoration: const InputDecoration(labelText: 'Noi DKTT'),
               onSaved: (v) => _d['noi_dktt'] = v,
             ),
             const SizedBox(height: 12),
             TextFormField(
-              decoration: const InputDecoration(labelText: 'Số CCCD'),
+              decoration: const InputDecoration(labelText: 'So CCCD'),
               onSaved: (v) => _d['so_cccd'] = v,
             ),
             const SizedBox(height: 12),
             TextFormField(
-              decoration: const InputDecoration(labelText: 'Ngày đến trại'),
+              decoration: const InputDecoration(labelText: 'Ngay den trai'),
               onSaved: (v) => _d['ngay_den_trai'] = v,
             ),
             const SizedBox(height: 12),
             TextFormField(
-              decoration: const InputDecoration(labelText: 'Tội danh'),
+              decoration: const InputDecoration(labelText: 'Toi danh'),
               maxLines: 2,
               onSaved: (v) => _d['toi_danh'] = v,
             ),
             const SizedBox(height: 12),
             TextFormField(
-              decoration: const InputDecoration(labelText: 'Án phạt'),
+              decoration: const InputDecoration(labelText: 'An phat'),
               onSaved: (v) => _d['an_phat'] = v,
             ),
             const SizedBox(height: 12),
             TextFormField(
-              decoration: const InputDecoration(labelText: 'Đội/Phân trại'),
+              decoration: const InputDecoration(labelText: 'Doi/Phan trai'),
               onSaved: (v) => _d['doi'] = v,
             ),
             const SizedBox(height: 12),
             TextFormField(
-              decoration: const InputDecoration(labelText: 'Tóm tắt hành vi'),
+              decoration: const InputDecoration(labelText: 'Tom tat hanh vi'),
               maxLines: 4,
               onSaved: (v) => _d['tom_tat_hanh_vi'] = v,
             ),
@@ -595,7 +606,7 @@ class _ManHinhThemState extends State<ManHinhThem> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                child: const Text('LƯU PHIẾU', style: TextStyle(fontSize: 16)),
+                child: const Text('LUU PHIEU', style: TextStyle(fontSize: 16)),
                 onPressed: () async {
                   if (_f.currentState!.validate()) {
                     _f.currentState!.save();
@@ -667,17 +678,17 @@ class _ManHinhChiTietState extends State<ManHinhChiTiet> with SingleTickerProvid
         controller: _tab,
         isScrollable: true,
         tabs: const [
-          Tab(text: 'Lý lịch'),
-          Tab(text: 'Gia đình'),
-          Tab(text: 'Xếp loại'),
+          Tab(text: 'Ly lich'),
+          Tab(text: 'Gia dinh'),
+          Tab(text: 'Xep loai'),
           Tab(text: 'Khen/KL'),
-          Tab(text: 'Xuất File')
+          Tab(text: 'Xuat File')
         ],
       ),
       actions: [
         IconButton(
           icon: const Icon(Icons.picture_as_pdf),
-          tooltip: 'Xuất PDF',
+          tooltip: 'Xuat PDF',
           onPressed: () => XuatPDF.xuat(context, widget.pn),
         )
       ],
@@ -692,26 +703,26 @@ class _ManHinhChiTietState extends State<ManHinhChiTiet> with SingleTickerProvid
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    _dong('Mã PT78', widget.pn['ma_pt78']),
-                    _dong('Họ tên', widget.pn['ho_ten'], dam: true),
-                    _dong('Ngày sinh', widget.pn['ngay_sinh']),
-                    _dong('Nơi ĐKTT', widget.pn['noi_dktt']),
-                    _dong('Số CCCD', widget.pn['so_cccd']),
-                    _dong('Ngày đến trại', widget.pn['ngay_den_trai']),
-                    _dong('Tội danh', widget.pn['toi_danh']),
-                    _dong('Án phạt', widget.pn['an_phat']),
-                    _dong('Đội', widget.pn['doi']),
+                    _dong('Ma PT78', widget.pn['ma_pt78']),
+                    _dong('Ho ten', widget.pn['ho_ten'], dam: true),
+                    _dong('Ngay sinh', widget.pn['ngay_sinh']),
+                    _dong('Noi DKTT', widget.pn['noi_dktt']),
+                    _dong('So CCCD', widget.pn['so_cccd']),
+                    _dong('Ngay den trai', widget.pn['ngay_den_trai']),
+                    _dong('Toi danh', widget.pn['toi_danh']),
+                    _dong('An phat', widget.pn['an_phat']),
+                    _dong('Doi', widget.pn['doi']),
                     _dong(
-                      'Trạng thái',
-                      widget.pn['trang_thai'] == 'dang_chap_hanh' ? 'Đang chấp hành' : 'Đã hết án',
+                      'Trang thai',
+                      widget.pn['trang_thai'] == 'dang_chap_hanh' ? 'Dang chap hanh' : 'Da het an',
                     ),
                     const SizedBox(height: 16),
-                    const Text('Tóm tắt hành vi:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Text('Tom tat hanh vi:', style: TextStyle(fontWeight: FontWeight.bold)),
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300)),
-                      child: Text(widget.pn['tom_tat_hanh_vi'] ?? 'Chưa cập nhật'),
+                      child: Text(widget.pn['tom_tat_hanh_vi'] ?? 'Chua cap nhat'),
                     ),
                   ],
                 ),
@@ -721,7 +732,7 @@ class _ManHinhChiTietState extends State<ManHinhChiTiet> with SingleTickerProvid
                 children: [
                   Expanded(
                     child: _gd.isEmpty
-                        ? const Center(child: Text('Chưa có thông tin gia đình'))
+                        ? const Center(child: Text('Chua co thong tin gia dinh'))
                         : ListView.builder(
                             padding: const EdgeInsets.all(8),
                             itemCount: _gd.length,
@@ -737,7 +748,7 @@ class _ManHinhChiTietState extends State<ManHinhChiTiet> with SingleTickerProvid
                     padding: const EdgeInsets.all(12),
                     child: ElevatedButton.icon(
                       icon: const Icon(Icons.add),
-                      label: const Text('Thêm thành viên'),
+                      label: const Text('Them thanh vien'),
                       onPressed: _themGiaDinh,
                     ),
                   ),
@@ -750,7 +761,7 @@ class _ManHinhChiTietState extends State<ManHinhChiTiet> with SingleTickerProvid
                     padding: const EdgeInsets.all(12),
                     child: Row(
                       children: [
-                        const Text('Năm: '),
+                        const Text('Nam: '),
                         DropdownButton<int>(
                           value: _nam,
                           items: [
@@ -767,7 +778,7 @@ class _ManHinhChiTietState extends State<ManHinhChiTiet> with SingleTickerProvid
                         const Spacer(),
                         ElevatedButton.icon(
                           icon: const Icon(Icons.add),
-                          label: const Text('Thêm'),
+                          label: const Text('Them'),
                           onPressed: _themXepLoai,
                         ),
                       ],
@@ -775,14 +786,14 @@ class _ManHinhChiTietState extends State<ManHinhChiTiet> with SingleTickerProvid
                   ),
                   Expanded(
                     child: _xl.isEmpty
-                        ? const Center(child: Text('Chưa có xếp loại'))
+                        ? const Center(child: Text('Chua co xep loai'))
                         : SingleChildScrollView(
                             padding: const EdgeInsets.all(8),
                             child: DataTable(
                               columns: const [
-                                DataColumn(label: Text('Tháng')),
-                                DataColumn(label: Text('Xếp loại')),
-                                DataColumn(label: Text('Nhận xét'))
+                                DataColumn(label: Text('Thang')),
+                                DataColumn(label: Text('Xep loai')),
+                                DataColumn(label: Text('Nhan xet'))
                               ],
                               rows: _xl
                                   .map(
@@ -816,7 +827,7 @@ class _ManHinhChiTietState extends State<ManHinhChiTiet> with SingleTickerProvid
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    const Text('🏆 Khen thưởng', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const Text('Khen thuong', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                     const SizedBox(height: 8),
                     ..._kt.map((kt) => Card(
                           child: ListTile(
@@ -826,11 +837,11 @@ class _ManHinhChiTietState extends State<ManHinhChiTiet> with SingleTickerProvid
                         )),
                     ElevatedButton.icon(
                       icon: const Icon(Icons.add),
-                      label: const Text('Thêm Khen thưởng'),
+                      label: const Text('Them Khen thuong'),
                       onPressed: _themKhenThuong,
                     ),
                     const SizedBox(height: 24),
-                    const Text('⚠️ Kỷ luật',
+                    const Text('Ky luat',
                         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.red)),
                     const SizedBox(height: 8),
                     ..._kl.map((kl) => Card(
@@ -838,16 +849,16 @@ class _ManHinhChiTietState extends State<ManHinhChiTiet> with SingleTickerProvid
                           child: ListTile(
                             title: Text(kl['hinh_thuc'] ?? '', style: const TextStyle(color: Colors.red)),
                             subtitle: Text(
-                                '${kl['so_quyet_dinh']} • ${kl['ngay_quyet_dinh']}\nLỗi: ${kl['loi_vi_pham']}'),
+                                '${kl['so_quyet_dinh']} • ${kl['ngay_quyet_dinh']}\nLoi: ${kl['loi_vi_pham']}'),
                           ),
                         )),
                     ElevatedButton.icon(
                       icon: const Icon(Icons.add),
-                      label: const Text('Thêm Kỷ luật'),
+                      label: const Text('Them Ky luat'),
                       onPressed: _themKyLuat,
                     ),
                     const SizedBox(height: 24),
-                    const Text('📉 Giảm thời hạn', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const Text('Giam thoi han', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                     const SizedBox(height: 8),
                     ..._gth.map((g) => Card(
                           child: ListTile(
@@ -857,7 +868,7 @@ class _ManHinhChiTietState extends State<ManHinhChiTiet> with SingleTickerProvid
                         )),
                     ElevatedButton.icon(
                       icon: const Icon(Icons.add),
-                      label: const Text('Thêm Giảm thời hạn'),
+                      label: const Text('Them Giam thoi han'),
                       onPressed: _themGiamThoiHan,
                     ),
                   ],
@@ -872,14 +883,14 @@ class _ManHinhChiTietState extends State<ManHinhChiTiet> with SingleTickerProvid
                     children: [
                       ElevatedButton.icon(
                         icon: const Icon(Icons.picture_as_pdf, size: 28),
-                        label: const Text('XUẤT PHIẾU PDF', style: TextStyle(fontSize: 16)),
+                        label: const Text('XUAT PHIEU PDF', style: TextStyle(fontSize: 16)),
                         style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(20)),
                         onPressed: () => XuatPDF.xuat(context, widget.pn),
                       ),
                       const SizedBox(height: 24),
                       ElevatedButton.icon(
                         icon: const Icon(Icons.table_chart, size: 28),
-                        label: const Text('XUẤT DANH SÁCH EXCEL', style: TextStyle(fontSize: 16)),
+                        label: const Text('XUAT DANH SACH EXCEL', style: TextStyle(fontSize: 16)),
                         style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(20)),
                         onPressed: () => XuatExcel.xuatDanhSach(context),
                       ),
@@ -911,40 +922,40 @@ class _ManHinhChiTietState extends State<ManHinhChiTiet> with SingleTickerProvid
     await showDialog(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Thêm thành viên gia đình'),
+        title: const Text('Them thanh vien gia dinh'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             DropdownButtonFormField<String>(
-              decoration: const InputDecoration(labelText: 'Quan hệ'),
-              items: ['Bố', 'Mẹ', 'Vợ', 'Chồng', 'Con', 'Anh', 'Chị', 'Em', 'Khác']
+              decoration: const InputDecoration(labelText: 'Quan he'),
+              items: ['Bo', 'Me', 'Vo', 'Chong', 'Con', 'Anh', 'Chi', 'Em', 'Khac']
                   .map((q) => DropdownMenuItem(value: q, child: Text(q)))
                   .toList(),
               onChanged: (v) => d['quan_he'] = v,
             ),
             TextField(
-              decoration: const InputDecoration(labelText: 'Họ và tên'),
+              decoration: const InputDecoration(labelText: 'Ho va ten'),
               onChanged: (v) => d['ho_ten'] = v,
             ),
             TextField(
-              decoration: const InputDecoration(labelText: 'Năm sinh'),
+              decoration: const InputDecoration(labelText: 'Nam sinh'),
               onChanged: (v) => d['nam_sinh'] = v,
             ),
             TextField(
-              decoration: const InputDecoration(labelText: 'Nghề nghiệp'),
+              decoration: const InputDecoration(labelText: 'Nghe nghiep'),
               onChanged: (v) => d['nghe_nghiep'] = v,
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('HỦY')),
+          TextButton(onPressed: () => Navigator.pop(c), child: const Text('HUY')),
           ElevatedButton(
             onPressed: () async {
               await DatabaseHelper.instance.themGiaDinh(widget.pn['id'], d);
               if (mounted) Navigator.pop(c);
               _tai();
             },
-            child: const Text('LƯU'),
+            child: const Text('LUU'),
           ),
         ],
       ),
@@ -959,43 +970,43 @@ class _ManHinhChiTietState extends State<ManHinhChiTiet> with SingleTickerProvid
       context: context,
       builder: (c) => StatefulBuilder(
         builder: (c, setDl) => AlertDialog(
-          title: const Text('Thêm xếp loại tháng'),
+          title: const Text('Them xep loai thang'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<int>(
                 value: t,
-                decoration: const InputDecoration(labelText: 'Tháng'),
-                items: [for (var i = 1; i <= 12; i++) DropdownMenuItem(value: i, child: Text('Tháng $i'))],
+                decoration: const InputDecoration(labelText: 'Thang'),
+                items: [for (var i = 1; i <= 12; i++) DropdownMenuItem(value: i, child: Text('Thang $i'))],
                 onChanged: (v) => setDl(() => t = v!),
               ),
               DropdownButtonFormField<String>(
                 value: xl,
-                decoration: const InputDecoration(labelText: 'Xếp loại'),
+                decoration: const InputDecoration(labelText: 'Xep loai'),
                 items: const [
-                  DropdownMenuItem(value: 'K', child: Text('Khá')),
-                  DropdownMenuItem(value: 'TB', child: Text('Trung bình')),
-                  DropdownMenuItem(value: 'Kh', child: Text('Kém')),
-                  DropdownMenuItem(value: 'G', child: Text('Gây'))
+                  DropdownMenuItem(value: 'K', child: Text('Kha')),
+                  DropdownMenuItem(value: 'TB', child: Text('Trung binh')),
+                  DropdownMenuItem(value: 'Kh', child: Text('Kem')),
+                  DropdownMenuItem(value: 'G', child: Text('Gay'))
                 ],
                 onChanged: (v) => setDl(() => xl = v!),
               ),
               TextField(
-                decoration: const InputDecoration(labelText: 'Nhận xét'),
+                decoration: const InputDecoration(labelText: 'Nhan xet'),
                 maxLines: 2,
                 onChanged: (v) => nx = v,
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(c), child: const Text('HỦY')),
+            TextButton(onPressed: () => Navigator.pop(c), child: const Text('HUY')),
             ElevatedButton(
               onPressed: () async {
                 await DatabaseHelper.instance.themXepLoai(widget.pn['id'], _nam, t, xl, nx);
                 if (mounted) Navigator.pop(c);
                 _tai();
               },
-              child: const Text('LƯU'),
+              child: const Text('LUU'),
             ),
           ],
         ),
@@ -1008,33 +1019,33 @@ class _ManHinhChiTietState extends State<ManHinhChiTiet> with SingleTickerProvid
     await showDialog(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Thêm khen thưởng'),
+        title: const Text('Them khen thuong'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              decoration: const InputDecoration(labelText: 'Số quyết định'),
+              decoration: const InputDecoration(labelText: 'So quyet dinh'),
               onChanged: (v) => d['so_quyet_dinh'] = v,
             ),
             TextField(
-              decoration: const InputDecoration(labelText: 'Ngày quyết định'),
+              decoration: const InputDecoration(labelText: 'Ngay quyet dinh'),
               onChanged: (v) => d['ngay_quyet_dinh'] = v,
             ),
             TextField(
-              decoration: const InputDecoration(labelText: 'Hình thức'),
+              decoration: const InputDecoration(labelText: 'Hinh thuc'),
               onChanged: (v) => d['hinh_thuc'] = v,
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('HỦY')),
+          TextButton(onPressed: () => Navigator.pop(c), child: const Text('HUY')),
           ElevatedButton(
             onPressed: () async {
               await DatabaseHelper.instance.themKT(widget.pn['id'], d);
               if (mounted) Navigator.pop(c);
               _tai();
             },
-            child: const Text('LƯU'),
+            child: const Text('LUU'),
           ),
         ],
       ),
@@ -1046,37 +1057,37 @@ class _ManHinhChiTietState extends State<ManHinhChiTiet> with SingleTickerProvid
     await showDialog(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Thêm kỷ luật'),
+        title: const Text('Them ky luat'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              decoration: const InputDecoration(labelText: 'Số quyết định'),
+              decoration: const InputDecoration(labelText: 'So quyet dinh'),
               onChanged: (v) => d['so_quyet_dinh'] = v,
             ),
             TextField(
-              decoration: const InputDecoration(labelText: 'Ngày quyết định'),
+              decoration: const InputDecoration(labelText: 'Ngay quyet dinh'),
               onChanged: (v) => d['ngay_quyet_dinh'] = v,
             ),
             TextField(
-              decoration: const InputDecoration(labelText: 'Lỗi vi phạm'),
+              decoration: const InputDecoration(labelText: 'Loi vi pham'),
               onChanged: (v) => d['loi_vi_pham'] = v,
             ),
             TextField(
-              decoration: const InputDecoration(labelText: 'Hình thức kỷ luật'),
+              decoration: const InputDecoration(labelText: 'Hinh thuc ky luat'),
               onChanged: (v) => d['hinh_thuc'] = v,
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('HỦY')),
+          TextButton(onPressed: () => Navigator.pop(c), child: const Text('HUY')),
           ElevatedButton(
             onPressed: () async {
               await DatabaseHelper.instance.themKL(widget.pn['id'], d);
               if (mounted) Navigator.pop(c);
               _tai();
             },
-            child: const Text('LƯU'),
+            child: const Text('LUU'),
           ),
         ],
       ),
@@ -1088,33 +1099,33 @@ class _ManHinhChiTietState extends State<ManHinhChiTiet> with SingleTickerProvid
     await showDialog(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Thêm giảm thời hạn'),
+        title: const Text('Them giam thoi han'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              decoration: const InputDecoration(labelText: 'Số quyết định'),
+              decoration: const InputDecoration(labelText: 'So quyet dinh'),
               onChanged: (v) => d['so_quyet_dinh'] = v,
             ),
             TextField(
-              decoration: const InputDecoration(labelText: 'Ngày quyết định'),
+              decoration: const InputDecoration(labelText: 'Ngay quyet dinh'),
               onChanged: (v) => d['ngay_quyet_dinh'] = v,
             ),
             TextField(
-              decoration: const InputDecoration(labelText: 'Mức giảm'),
+              decoration: const InputDecoration(labelText: 'Muc giam'),
               onChanged: (v) => d['muc_giam'] = v,
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('HỦY')),
+          TextButton(onPressed: () => Navigator.pop(c), child: const Text('HUY')),
           ElevatedButton(
             onPressed: () async {
               await DatabaseHelper.instance.themGiamTH(widget.pn['id'], d);
               if (mounted) Navigator.pop(c);
               _tai();
             },
-            child: const Text('LƯU'),
+            child: const Text('LUU'),
           ),
         ],
       ),
@@ -1127,7 +1138,7 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) => MaterialApp(
-        title: 'Quản Lý PT78',
+        title: 'Quan Ly PT78',
         theme: ThemeData(
           primarySwatch: Colors.blueGrey,
           useMaterial3: true,
