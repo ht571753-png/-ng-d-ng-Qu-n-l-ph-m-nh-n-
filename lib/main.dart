@@ -636,7 +636,6 @@ class ManHinhChiTiet extends StatefulWidget {
 class _ManHinhChiTietState extends State<ManHinhChiTiet> with SingleTickerProviderStateMixin {
   late TabController _tab;
   List<Map> _gd = [];
-  List<Map> _xh = [];
   List<Map> _xl = [];
   List<Map> _gth = [];
   List<Map> _kt = [];
@@ -654,7 +653,6 @@ class _ManHinhChiTietState extends State<ManHinhChiTiet> with SingleTickerProvid
   Future<void> _tai() async {
     setState(() => _dang = true);
     _gd = await DatabaseHelper.instance.layGiaDinh(widget.pn['id']);
-    _xh = await DatabaseHelper.instance.layXaHoi(widget.pn['id']);
     _xl = await DatabaseHelper.instance.layXepLoai(widget.pn['id'], _nam);
     _gth = await DatabaseHelper.instance.layGiamTH(widget.pn['id']);
     _kt = await DatabaseHelper.instance.layKT(widget.pn['id']);
