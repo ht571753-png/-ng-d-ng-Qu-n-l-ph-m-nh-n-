@@ -1,19 +1,22 @@
 name: quanly_pt78
- description: Quản lý theo dõi quy trình chấp hành án PT78
- publish_to: 'none'
- version: 1.0.0+1
- environment:
-   sdk: '>=3.0.0 <4.0.0'
- dependencies:
-   flutter:
-     sdk: flutter
-   sqflite: ^2.3.0
-   path: ^1.8.3
-   crypto: ^3.0.3
-   pdf: ^3.10.7
-   excel: ^2.1.0
-   path_provider: ^2.1.1
-   open_filex: ^4.3.4
-   intl: ^0.19.0
- flutter:
-   uses-material-design: true
+description: Quan ly theo doi quy trinh chap hanh an PT78
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  crypto: ^3.0.3
+  pdf: ^3.10.7
+  excel: ^2.1.0
+  path_provider: ^2.1.1
+  open_filex: ^4.3.4
+  intl: ^0.19.0
+
+flutter:
+  uses-material-design: true
