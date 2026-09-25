@@ -26,15 +26,14 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// ===== MÀN HÌNH ĐĂNG NHẬP =====
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 class _LoginScreenState extends State<LoginScreen> {
-  final _userCtrl = TextEditingController();
-  final _passCtrl = TextEditingController();
+  final _u = TextEditingController();
+  final _p = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -45,28 +44,16 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            TextField(
-              controller: _userCtrl,
-              decoration: const InputDecoration(labelText: 'Tên đăng nhập'),
-            ),
+            TextField(controller: _u, decoration: const InputDecoration(labelText: 'Tên đăng nhập')),
             const SizedBox(height: 16),
-            TextField(
-              controller: _passCtrl,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Mật khẩu'),
-            ),
+            TextField(controller: _p, obscureText: true, decoration: const InputDecoration(labelText: 'Mật khẩu')),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
-                if (_userCtrl.text == 'admin' && _passCtrl.text == 'admin123') {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const HomeScreen()),
-                  );
+                if (_u.text == 'admin' && _p.text == 'admin123') {
+                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Sai thông tin đăng nhập!')),
-                  );
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sai tài khoản/mật khẩu!')));
                 }
               },
               child: const Text('Đăng Nhập'),
@@ -78,136 +65,88 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-// ===== MÀN HÌNH CHÍNH =====
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Quản Lý Quy Trình Chấp Hành Án PT78')),
+      appBar: AppBar(title: const Text('Quản Lý PT78')),
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'Chọn định dạng xuất báo cáo',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 56),
-                  textStyle: const TextStyle(fontSize: 16),
-                ),
-                icon: const Icon(Icons.table_chart, size: 24),
-                label: const Text('Xuất Báo Cáo Excel'),
-                onPressed: () => _xuatExcel(context),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 56),
-                  textStyle: const TextStyle(fontSize: 16),
-                ),
-                icon: const Icon(Icons.picture_as_pdf, size: 24),
-                label: const Text('Xuất Báo Cáo PDF'),
-                onPressed: () => _xuatPdf(context),
-              ),
-            ],
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton.icon(
+              icon: const Icon(Icons.table_chart),
+              label: const Text('Xuất Excel'),
+              onPressed: () => _xuatExcel(context),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.picture_as_pdf),
+              label: const Text('Xuất PDF'),
+              onPressed: () => _xuatPdf(context),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  // ===== XUẤT EXCEL =====
   Future<void> _xuatExcel(BuildContext context) async {
     try {
       final excel = Excel.createExcel();
       excel.delete('Sheet1');
-      final sheet = excel['Báo cáo PT78'];
+      final sheet = excel['Báo cáo'];
 
-      // Dùng CellValue thay vì TextCellValue
+      // Dùng đúng tên lớp của excel ^2.1.0
       sheet.appendRow([
-        CellValue('Mã'),
-        CellValue('Tên'),
-        CellValue('Ngày'),
-        CellValue('Trạng thái'),
+        TextCellValue('Mã'),
+        TextCellValue('Tên'),
+        TextCellValue('Ngày'),
+        TextCellValue('Trạng thái'),
       ]);
-
       sheet.appendRow([
-        CellValue('PT001'),
-        CellValue('Nguyễn Văn A'),
-        CellValue(DateFormat('dd/MM/yyyy').format(DateTime.now())),
-        CellValue('Đang xử lý'),
-      ]);
-
-      sheet.appendRow([
-        CellValue('PT002'),
-        CellValue('Trần Thị B'),
-        CellValue(DateFormat('dd/MM/yyyy').format(DateTime.now())),
-        CellValue('Hoàn thành'),
+        TextCellValue('PT001'),
+        TextCellValue('Nguyễn Văn A'),
+        TextCellValue(DateFormat('dd/MM/yyyy').format(DateTime.now())),
+        TextCellValue('Đang xử lý'),
       ]);
 
       final dir = await getTemporaryDirectory();
-      final tenFile = 'BaoCao_PT78_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
-      final file = File('${dir.path}/$tenFile');
-      await file.writeAsBytes(excel.encode()!);
+      final f = File('${dir.path}/BaoCao_PT78_${DateTime.now().millisecondsSinceEpoch}.xlsx');
+      await f.writeAsBytes(excel.encode()!);
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✅ Đã tạo: $tenFile')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('✅ Đã lưu: ${f.path}')));
       }
-      await OpenFilex.open(file.path);
+      await OpenFilex.open(f.path);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ Lỗi Excel: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Lỗi: $e')));
       }
     }
   }
 
-  // ===== XUẤT PDF =====
   Future<void> _xuatPdf(BuildContext context) async {
     try {
       final pdf = pw.Document();
       pdf.addPage(
         pw.Page(
-          pageFormat: PdfPageFormat.a4,
-          build: (pw.Context ctx) => pw.Padding(
+          build: (ctx) => pw.Padding(
             padding: const pw.EdgeInsets.all(24),
             child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Center(
-                  child: pw.Text(
-                    'BÁO CÁO QUY TRÌNH CHẤP HÀNH ÁN PT78',
-                    style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
-                  ),
-                ),
-                pw.SizedBox(height: 8),
-                pw.Center(
-                  child: pw.Text(
-                    'Ngày xuất: ${DateFormat('dd/MM/yyyy HH:mm:ss').format(DateTime.now())}',
-                    style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
-                  ),
-                ),
-                pw.SizedBox(height: 24),
-                // Dùng TableHelper thay vì Table.fromTextArray
-                pw.TableHelper.fromTextArray(
-                  headers: ['Mã', 'Họ và Tên', 'Ngày', 'Trạng thái'],
+                pw.Text('BÁO CÁO PT78', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                pw.SizedBox(height: 16),
+                pw.Text('Ngày: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}'),
+                pw.SizedBox(height: 16),
+                // Dùng đúng tên hàm cho pdf ^3.10.7
+                pw.Table.fromTextArray(
+                  headers: ['Mã', 'Tên', 'Ngày', 'Trạng thái'],
                   data: [
                     ['PT001', 'Nguyễn Văn A', DateFormat('dd/MM/yyyy').format(DateTime.now()), 'Đang xử lý'],
-                    ['PT002', 'Trần Thị B', DateFormat('dd/MM/yyyy').format(DateTime.now()), 'Hoàn thành'],
                   ],
-                  headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
-                  headerDecoration: const pw.BoxDecoration(color: PdfColors.blue700),
-                  cellAlignment: pw.Alignment.center,
                 ),
               ],
             ),
@@ -216,21 +155,16 @@ class HomeScreen extends StatelessWidget {
       );
 
       final dir = await getTemporaryDirectory();
-      final tenFile = 'BaoCao_PT78_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
-      final file = File('${dir.path}/$tenFile');
-      await file.writeAsBytes(await pdf.save());
+      final f = File('${dir.path}/BaoCao_PT78_${DateTime.now().millisecondsSinceEpoch}.pdf');
+      await f.writeAsBytes(await pdf.save());
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✅ Đã tạo: $tenFile')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('✅ Đã lưu: ${f.path}')));
       }
-      await OpenFilex.open(file.path);
+      await OpenFilex.open(f.path);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ Lỗi PDF: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Lỗi: $e')));
       }
     }
   }
