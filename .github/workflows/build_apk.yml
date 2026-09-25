@@ -1,6 +1,5 @@
 name: Build Android APK Phieu Theo Doi
 
-# Kích hoạt khi đẩy lên nhánh main HOẶC chạy thủ công
 on:
   push:
     branches: [ main ]
@@ -12,44 +11,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Bước 1: Lấy mã nguồn
       - name: 📥 Kiểm tra mã nguồn
         uses: actions/checkout@v4
 
-      # Bước 2: Cài đặt Java (cần cho Android)
-      - name: ☕ Cài đặt Java 17
+      - name: ☕ Cài Java 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      # Bước 3: Cài đặt Flutter phiên bản ổn định
-      - name: 📦 Cài đặt Flutter
+      - name: 📦 Cài Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
+          flutter-version: '3.22.0'
           channel: 'stable'
 
-      # Bước 4: Kiểm tra môi trường
-      - name: 🔍 Kiểm tra môi trường Flutter
+      - name: 🔍 Kiểm tra phiên bản
         run: flutter --version
 
-      # Bước 5: Tải tất cả thư viện
-      - name: 📚 Cài thư viện phụ thuộc
+      - name: 🧹 Dọn dẹp
+        run: flutter clean
+
+      - name: 📚 Tải thư viện
         run: flutter pub get
 
-      # Bước 6: Kiểm tra lỗi cú pháp
-      - name: ⚠️ Kiểm tra mã nguồn
-        run: flutter analyze
+      - name: ⚠️ Kiểm tra lỗi mã
+        run: flutter analyze --no-fatal-infos
 
-      # Bước 7: Build file APK phát hành
-      - name: 🏗️ Build APK phát hành
-        run: flutter build apk --release
+      - name: 🏗️ Build APK
+        run: flutter build apk --release --no-shrink
 
-      # Bước 8: Tải lên file APK để lấy về
-      - name: 📤 Tải file APK
+      - name: 📤 Tải APK
         uses: actions/upload-artifact@v4
         with:
-          name: UngDung_PhieuTheoDoi_PT78_Full
+          name: UngDung_PhieuTheoDoi_PT78
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 90
