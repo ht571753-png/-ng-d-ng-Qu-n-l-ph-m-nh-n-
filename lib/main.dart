@@ -3,16 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:excel/excel.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:intl/intl.dart';
 import 'dart:io';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Khóa màn hình dọc — tránh lỗi khi xoay máy
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-  ]);
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(const MyApp());
 }
 
@@ -81,11 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: FilledButton(
                     onPressed: _dangXuLy ? null : _xuLyDangNhap,
                     child: _dangXuLy
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                          )
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                         : const Text('Đăng Nhập', style: TextStyle(fontSize: 16)),
                   ),
                 ),
@@ -99,23 +93,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _xuLyDangNhap() {
     setState(() => _dangXuLy = true);
-
     Future.delayed(const Duration(milliseconds: 500), () {
       if (!mounted) return;
       setState(() => _dangXuLy = false);
-
       if (_userCtrl.text.trim() == 'admin' && _passCtrl.text == 'admin123') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const TrangChinh()),
-        );
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const TrangChinh()));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sai tài khoản hoặc mật khẩu!'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 2),
-          ),
+          const SnackBar(content: Text('Sai tài khoản hoặc mật khẩu!'), backgroundColor: Colors.red),
         );
       }
     });
@@ -137,13 +122,7 @@ class _TrangChinhState extends State<TrangChinh> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Quản Lý PT78'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Đăng xuất',
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
+        actions: [IconButton(icon: const Icon(Icons.logout), tooltip: 'Đăng xuất', onPressed: () => Navigator.pop(context))],
       ),
       body: SafeArea(
         child: Center(
@@ -155,32 +134,20 @@ class _TrangChinhState extends State<TrangChinh> {
                 const Icon(Icons.folder_copy, size: 64, color: Colors.blue),
                 const SizedBox(height: 32),
                 FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 56),
-                  ),
+                  style: FilledButton.styleFrom(minimumSize: const Size(double.infinity, 56)),
                   icon: const Icon(Icons.table_chart),
                   label: const Text('Xuất Báo Cáo Excel', style: TextStyle(fontSize: 16)),
                   onPressed: _dangXuatExcel ? null : _taoExcel,
                 ),
-                if (_dangXuatExcel)
-                  const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: CircularProgressIndicator(),
-                  ),
+                if (_dangXuatExcel) const Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator()),
                 const SizedBox(height: 20),
                 FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 56),
-                  ),
+                  style: FilledButton.styleFrom(minimumSize: const Size(double.infinity, 56)),
                   icon: const Icon(Icons.picture_as_pdf),
                   label: const Text('Xuất Báo Cáo PDF', style: TextStyle(fontSize: 16)),
                   onPressed: _dangXuatPdf ? null : _taoPdf,
                 ),
-                if (_dangXuatPdf)
-                  const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: CircularProgressIndicator(),
-                  ),
+                if (_dangXuatPdf) const Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator()),
               ],
             ),
           ),
@@ -191,43 +158,23 @@ class _TrangChinhState extends State<TrangChinh> {
 
   Future<void> _taoExcel() async {
     if (mounted) setState(() => _dangXuatExcel = true);
-
     try {
       final excel = Excel.createExcel();
       excel.delete('Sheet1');
       final sheet = excel['Báo cáo'];
-
       sheet.appendRow(['Mã', 'Họ và Tên', 'Ngày', 'Trạng thái']);
-      sheet.appendRow([
-        'PT001',
-        'Nguyễn Văn A',
-        DateFormat('dd/MM/yyyy').format(DateTime.now()),
-        'Đang xử lý'
-      ]);
-      sheet.appendRow([
-        'PT002',
-        'Trần Thị B',
-        DateFormat('dd/MM/yyyy').format(DateTime.now()),
-        'Hoàn thành'
-      ]);
+      sheet.appendRow(['PT001', 'Nguyễn Văn A', DateFormat('dd/MM/yyyy').format(DateTime.now()), 'Đang xử lý']);
+      sheet.appendRow(['PT002', 'Trần Thị B', DateFormat('dd/MM/yyyy').format(DateTime.now()), 'Hoàn thành']);
 
       final thuMuc = await getTemporaryDirectory();
       final tenFile = 'BaoCao_PT78_${DateTime.now().millisecondsSinceEpoch}.xlsx';
       final file = File('${thuMuc.path}/$tenFile');
       await file.writeAsBytes(excel.encode()!);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✅ Thành công: $tenFile')),
-        );
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('✅ Thành công: $tenFile')));
       await OpenFilex.open(file.path);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ Lỗi: $e'), backgroundColor: Colors.red),
-        );
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Lỗi: $e'), backgroundColor: Colors.red));
     } finally {
       if (mounted) setState(() => _dangXuatExcel = false);
     }
@@ -235,41 +182,25 @@ class _TrangChinhState extends State<TrangChinh> {
 
   Future<void> _taoPdf() async {
     if (mounted) setState(() => _dangXuatPdf = true);
-
     try {
       final pdf = pw.Document();
       pdf.addPage(
         pw.Page(
+          pageFormat: PdfPageFormat.a4,
           build: (pw.Context ctx) => pw.Padding(
             padding: const pw.EdgeInsets.all(24),
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.center,
               children: [
-                pw.Text(
-                  'BÁO CÁO QUY TRÌNH PT78',
-                  style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
-                ),
+                pw.Text('BÁO CÁO QUY TRÌNH PT78', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
                 pw.SizedBox(height: 12),
-                pw.Text(
-                  'Ngày xuất: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
-                  style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey),
-                ),
+                pw.Text('Ngày xuất: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}', style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey)),
                 pw.SizedBox(height: 24),
-                pw.Table.fromTextArray(
+                pw.TableHelper.fromTextArray(
                   headers: ['Mã', 'Họ và Tên', 'Ngày', 'Trạng thái'],
                   data: [
-                    [
-                      'PT001',
-                      'Nguyễn Văn A',
-                      DateFormat('dd/MM/yyyy').format(DateTime.now()),
-                      'Đang xử lý'
-                    ],
-                    [
-                      'PT002',
-                      'Trần Thị B',
-                      DateFormat('dd/MM/yyyy').format(DateTime.now()),
-                      'Hoàn thành'
-                    ],
+                    ['PT001', 'Nguyễn Văn A', DateFormat('dd/MM/yyyy').format(DateTime.now()), 'Đang xử lý'],
+                    ['PT002', 'Trần Thị B', DateFormat('dd/MM/yyyy').format(DateTime.now()), 'Hoàn thành'],
                   ],
                   headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
                   headerDecoration: const pw.BoxDecoration(color: PdfColors.blue700),
@@ -285,18 +216,10 @@ class _TrangChinhState extends State<TrangChinh> {
       final file = File('${thuMuc.path}/$tenFile');
       await file.writeAsBytes(await pdf.save());
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✅ Thành công: $tenFile')),
-        );
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('✅ Thành công: $tenFile')));
       await OpenFilex.open(file.path);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ Lỗi: $e'), backgroundColor: Colors.red),
-        );
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Lỗi: $e'), backgroundColor: Colors.red));
     } finally {
       if (mounted) setState(() => _dangXuatPdf = false);
     }
