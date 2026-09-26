@@ -93,24 +93,25 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _xuatExcel(BuildContext context) async {
+  static Future<void> _xuatExcel(BuildContext context) async {
     try {
       final excel = Excel.createExcel();
       excel.delete('Sheet1');
       final sheet = excel['Báo cáo'];
 
-      // Dùng đúng tên lớp của excel ^2.1.0
+      // ✅ excel ^2.1.0: truyền trực tiếp giá trị, KHÔNG dùng TextCellValue
+      sheet.appendRow(['Mã', 'Tên', 'Ngày', 'Trạng thái']);
       sheet.appendRow([
-        TextCellValue('Mã'),
-        TextCellValue('Tên'),
-        TextCellValue('Ngày'),
-        TextCellValue('Trạng thái'),
+        'PT001',
+        'Nguyễn Văn A',
+        DateFormat('dd/MM/yyyy').format(DateTime.now()),
+        'Đang xử lý'
       ]);
       sheet.appendRow([
-        TextCellValue('PT001'),
-        TextCellValue('Nguyễn Văn A'),
-        TextCellValue(DateFormat('dd/MM/yyyy').format(DateTime.now())),
-        TextCellValue('Đang xử lý'),
+        'PT002',
+        'Trần Thị B',
+        DateFormat('dd/MM/yyyy').format(DateTime.now()),
+        'Hoàn thành'
       ]);
 
       final dir = await getTemporaryDirectory();
@@ -123,17 +124,17 @@ class HomeScreen extends StatelessWidget {
       await OpenFilex.open(f.path);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Lỗi: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Lỗi Excel: $e')));
       }
     }
   }
 
-  Future<void> _xuatPdf(BuildContext context) async {
+  static Future<void> _xuatPdf(BuildContext context) async {
     try {
       final pdf = pw.Document();
       pdf.addPage(
         pw.Page(
-          build: (ctx) => pw.Padding(
+          build: (pw.Context ctx) => pw.Padding(
             padding: const pw.EdgeInsets.all(24),
             child: pw.Column(
               children: [
@@ -141,11 +142,12 @@ class HomeScreen extends StatelessWidget {
                 pw.SizedBox(height: 16),
                 pw.Text('Ngày: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}'),
                 pw.SizedBox(height: 16),
-                // Dùng đúng tên hàm cho pdf ^3.10.7
-                pw.Table.fromTextArray(
+                // ✅ pdf ^3.10.7: dùng TableHelper thay vì Table.fromTextArray
+                pw.TableHelper.fromTextArray(
                   headers: ['Mã', 'Tên', 'Ngày', 'Trạng thái'],
                   data: [
                     ['PT001', 'Nguyễn Văn A', DateFormat('dd/MM/yyyy').format(DateTime.now()), 'Đang xử lý'],
+                    ['PT002', 'Trần Thị B', DateFormat('dd/MM/yyyy').format(DateTime.now()), 'Hoàn thành'],
                   ],
                 ),
               ],
@@ -164,7 +166,7 @@ class HomeScreen extends StatelessWidget {
       await OpenFilex.open(f.path);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Lỗi: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Lỗi PDF: $e')));
       }
     }
   }
